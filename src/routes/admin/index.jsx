@@ -5,6 +5,8 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getCategories, createCategory, deleteCategory } from "../../api/categories/categories";
 import { getNews, createNews, deleteNews, uploadImage, updateNews } from "../../api/news/news";
+import { useTheme } from '../../components/ThemeContext'
+import { SunIcon, MoonIcon } from '@heroicons/react/24/outline'
 
 export const Route = createFileRoute('/admin/')({
   beforeLoad: () => {
@@ -18,6 +20,7 @@ export const Route = createFileRoute('/admin/')({
 
 function AdminDashboard() {
   const navigate = useNavigate()
+  const { theme, toggleTheme } = useTheme()
 
   const {
     data: serverCategories,
@@ -34,14 +37,11 @@ function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview')
   const [catInput, setCatInput] = useState('')
   const [newsTitle, setNewsTitle] = useState('')
-  const [newsDesc, setNewsDesc] = useState('')         
+  const [newsDesc, setNewsDesc] = useState('')
   const [selectedCatId, setSelectedCatId] = useState('')
-  
-  // 🎯 Şəkil üçün iki fərqli state: Biri fayl üçün, biri birbaşa URL daxil etmək üçün
   const [selectedImage, setSelectedImage] = useState(null)
   const [imageUrlInput, setImageUrlInput] = useState('')
-  const [imageType, setImageType] = useState('file') // 'file' və ya 'url'
-
+  const [imageType, setImageType] = useState('file')
   const [isUploading, setIsUploading] = useState(false)
   const [editingNewsId, setEditingNewsId] = useState(null)
 
@@ -50,7 +50,6 @@ function AdminDashboard() {
     navigate({ to: '/admin/login' })
   }
 
-  // ── KATEQORİYA ───────────────────────────────────────────────
   const handleSaveCategory = async (e) => {
     e.preventDefault()
     if (!catInput.trim()) return
@@ -75,7 +74,6 @@ function AdminDashboard() {
     }
   }
 
-  // ── XƏBƏR ────────────────────────────────────────────────────
   const resetNewsForm = () => {
     setNewsTitle('')
     setNewsDesc('')
@@ -90,42 +88,30 @@ function AdminDashboard() {
     setEditingNewsId(news._id || news.id)
     setNewsTitle(news.title || '')
     setNewsDesc(news.description || news.content || '')
-    
-    // Kateqoriya obyekt və ya string gəlsə də təmiz ID-ni çıxarırıq
-    const catId = typeof news.category === 'object' 
-      ? (news.category?._id || news.category?.id) 
+    const catId = typeof news.category === 'object'
+      ? (news.category?._id || news.category?.id)
       : (news.category || news.category_id || '');
-      
     setSelectedCatId(catId)
-
-    // Əgər mövcud xəbərin şəkli varsa, onu URL inputuna doldururuq və tipi 'url' edirik
     if (news.img) {
       setImageUrlInput(news.img)
       setImageType('url')
     }
-
     setActiveTab('news')
   }
 
   const handleSaveNews = async (e) => {
     e.preventDefault()
-
     if (!editingNewsId && (!newsTitle.trim() || !newsDesc.trim())) {
       alert('Başlıq və məzmun mütləqdir!')
       return
     }
-
     try {
       setIsUploading(true)
-
       const newsData = {}
-      if (newsTitle.trim())    newsData.title       = newsTitle.trim()
-      if (newsDesc.trim())     newsData.description = newsDesc.trim()  
-      if (selectedCatId)       newsData.category_id = selectedCatId   
-
-      // 🎯 ŞƏKİL GÖNDƏRMƏ MƏNTİQİ (FAYL VƏ YA URL SEÇİMİNƏ GÖRƏ)
+      if (newsTitle.trim())  newsData.title       = newsTitle.trim()
+      if (newsDesc.trim())   newsData.description = newsDesc.trim()
+      if (selectedCatId)     newsData.category_id = selectedCatId
       if (imageType === 'file' && selectedImage) {
-        // Əgər istifadəçi fayl yükləməyi seçibsə
         try {
           const imgUrl = await uploadImage(selectedImage)
           if (imgUrl) newsData.img = imgUrl
@@ -134,15 +120,11 @@ function AdminDashboard() {
           alert('Şəkil serverə yüklənə bilmədi, link yoxlanılır...')
         }
       } else if (imageType === 'url' && imageUrlInput.trim()) {
-        // Əgər istifadəçi birbaşa hazır şəkil linki (URL) daxil edibsə
         newsData.img = imageUrlInput.trim()
       }
-
-      // Əgər heç bir şəkil təyin olunmayıbsa və bu yeni xəbərdirsə default şəkil qoyulur
       if (!editingNewsId && !newsData.img) {
         newsData.img = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=1000'
       }
-
       if (editingNewsId) {
         await updateNews(editingNewsId, newsData)
         alert('Xəbər uğurla yeniləndi!')
@@ -150,11 +132,9 @@ function AdminDashboard() {
         await createNews(newsData)
         alert('Xəbər uğurla əlavə edildi!')
       }
-
       resetNewsForm()
       refetchNews()
       setActiveTab('overview')
-
     } catch (error) {
       console.error('Server cavabı:', error.response?.data)
       alert('Xəta: ' + (error.response?.data?.message || error.response?.data || error.message))
@@ -174,22 +154,13 @@ function AdminDashboard() {
     }
   }
 
-  // ── KÖMƏKÇI KATEQORİYA ADI TAPMA FUNKSİYASI (SIĞORTALI) ──
   const getCategoryName = (news) => {
-    if (news.category && typeof news.category === 'object' && news.category.name) {
-      return news.category.name;
-    }
-    if (news.category_id && typeof news.category_id === 'object' && news.category_id.name) {
-      return news.category_id.name;
-    }
+    if (news.category && typeof news.category === 'object' && news.category.name) return news.category.name;
+    if (news.category_id && typeof news.category_id === 'object' && news.category_id.name) return news.category_id.name;
     const rawCatId = news.category || news.category_id;
     const catId = typeof rawCatId === 'object' ? (rawCatId?._id || rawCatId?.id) : rawCatId;
-
     if (!catId || !serverCategories?.length) return 'Kateqoriyasız';
-
-    const found = serverCategories.find(
-      c => String(c._id || c.id) === String(catId)
-    );
+    const found = serverCategories.find(c => String(c._id || c.id) === String(catId));
     return found ? found.name : 'Kateqoriyasız';
   }
 
@@ -204,10 +175,10 @@ function AdminDashboard() {
   const finalNewsList = getNewsArray()
 
   return (
-    <div className="min-h-screen bg-zinc-100 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-zinc-100 dark:bg-zinc-900 flex flex-col md:flex-row">
 
       {/* SOL PANEL */}
-      <div className="w-full md:w-64 bg-zinc-900 text-zinc-300 flex flex-col p-6">
+      <div className="w-full md:w-64 bg-zinc-900 dark:bg-zinc-950 text-zinc-300 flex flex-col p-6">
         <div className="mb-8">
           <h1 className="text-xl font-bold text-white">Oxu.Az Admin</h1>
           <p className="text-xs text-zinc-500 mt-1">daivd@davidjs.dev</p>
@@ -245,58 +216,72 @@ function AdminDashboard() {
       {/* SAĞ PANEL */}
       <div className="flex-1 p-6 md:p-10 overflow-y-auto">
 
+        {/* YUXARI SAĞ - DARK MODE TOGGLE */}
+        <div className="flex justify-end mb-6">
+          <button
+            onClick={toggleTheme}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition-colors shadow-sm"
+          >
+            {theme === 'dark'
+              ? <SunIcon className="size-4 text-yellow-400" />
+              : <MoonIcon className="size-4 text-zinc-600" />
+            }
+            {theme === 'dark' ? '' : ''}
+          </button>
+        </div>
+
         {/* TAB 1: ÜMUMİ BAXIŞ */}
         {activeTab === 'overview' && (
           <div>
-            <h2 className="text-2xl font-bold text-zinc-800 mb-6">İdarəetmə Paneli</h2>
+            <h2 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100 mb-6">İdarəetmə Paneli</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
+              <div className="bg-white dark:bg-zinc-800 p-6 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
                 <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Kateqoriyalar</p>
-                <p className="text-3xl font-bold text-zinc-800 mt-2">
+                <p className="text-3xl font-bold text-zinc-800 dark:text-zinc-100 mt-2">
                   {isCatsLoading ? '...' : serverCategories?.length || 0}
                 </p>
               </div>
-              <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
+              <div className="bg-white dark:bg-zinc-800 p-6 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
                 <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Ümumi Xəbərlər</p>
-                <p className="text-3xl font-bold text-zinc-800 mt-2">
+                <p className="text-3xl font-bold text-zinc-800 dark:text-zinc-100 mt-2">
                   {isNewsLoading ? '...' : finalNewsList.length}
                 </p>
               </div>
-              <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
+              <div className="bg-white dark:bg-zinc-800 p-6 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
                 <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Status</p>
                 <p className="text-3xl font-bold text-green-600 mt-2">Aktiv</p>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
-              <h3 className="text-base font-bold text-zinc-800 mb-4">Mövcud Xəbərlər</h3>
+            <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm p-6">
+              <h3 className="text-base font-bold text-zinc-800 dark:text-zinc-100 mb-4">Mövcud Xəbərlər</h3>
               {isNewsLoading || isCatsLoading ? (
                 <p className="text-sm text-zinc-400">Yüknəlir...</p>
               ) : finalNewsList.length === 0 ? (
                 <p className="text-sm text-zinc-400">Hələ ki xəbər əlavə edilməyib.</p>
               ) : (
-                <div className="divide-y divide-zinc-100">
+                <div className="divide-y divide-zinc-100 dark:divide-zinc-700">
                   {finalNewsList.map((news) => (
                     <div
                       key={news._id || news.id}
-                      className="py-4 flex justify-between items-center hover:bg-zinc-50/50 px-2 rounded-lg transition-colors"
+                      className="py-4 flex justify-between items-center hover:bg-zinc-50/50 dark:hover:bg-zinc-700/50 px-2 rounded-lg transition-colors"
                     >
                       <div className="flex items-start gap-4 flex-1 pr-4">
                         {news.img && (
                           <img
                             src={news.img}
                             alt="news"
-                            className="w-14 h-14 object-cover rounded-lg border border-zinc-200 flex-shrink-0"
+                            className="w-14 h-14 object-cover rounded-lg border border-zinc-200 dark:border-zinc-600 flex-shrink-0"
                           />
                         )}
                         <div>
-                          <h4 className="text-sm font-semibold text-zinc-800">{news.title}</h4>
+                          <h4 className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{news.title}</h4>
                           <p className="text-xs text-zinc-400 mt-0.5 line-clamp-2">{news.description}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
-                        <span className="bg-zinc-100 text-zinc-600 text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap">
+                        <span className="bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap">
                           {getCategoryName(news)}
                         </span>
                         <button
@@ -323,11 +308,11 @@ function AdminDashboard() {
         {/* TAB 2: KATEQORİYALAR */}
         {activeTab === 'categories' && (
           <div>
-            <h2 className="text-2xl font-bold text-zinc-800 mb-6">Kateqoriya İdarəetməsi</h2>
+            <h2 className="text-2xl font-bold text-zinc-800 dark:text-zinc-100 mb-6">Kateqoriya İdarəetməsi</h2>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-              <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm h-fit">
-                <h3 className="text-sm font-bold text-zinc-700 mb-4">➕ Yeni Kateqoriya</h3>
+              <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 shadow-sm h-fit">
+                <h3 className="text-sm font-bold text-zinc-700 dark:text-zinc-200 mb-4">➕ Yeni Kateqoriya</h3>
                 <form onSubmit={handleSaveCategory} className="space-y-4">
                   <div>
                     <label className="block text-xs text-zinc-500 mb-1">Kateqoriya Adı</label>
@@ -336,37 +321,37 @@ function AdminDashboard() {
                       value={catInput}
                       onChange={(e) => setCatInput(e.target.value)}
                       placeholder="Məsələn: İdman"
-                      className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-300"
+                      className="w-full border border-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-300"
                     />
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-2 rounded-lg text-sm font-medium transition-colors"
+                    className="w-full bg-zinc-800 hover:bg-zinc-700 dark:bg-zinc-600 dark:hover:bg-zinc-500 text-white py-2 rounded-lg text-sm font-medium transition-colors"
                   >
                     Əlavə et
                   </button>
                 </form>
               </div>
 
-              <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm lg:col-span-2">
-                <h3 className="text-sm font-bold text-zinc-700 mb-4">Mövcud Kateqoriyalar</h3>
+              <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 shadow-sm lg:col-span-2">
+                <h3 className="text-sm font-bold text-zinc-700 dark:text-zinc-200 mb-4">Mövcud Kateqoriyalar</h3>
                 {isCatsLoading ? (
                   <p className="text-sm text-zinc-400">Yüklənir...</p>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="border-b border-zinc-200 text-xs text-zinc-400 uppercase font-semibold">
+                        <tr className="border-b border-zinc-200 dark:border-zinc-700 text-xs text-zinc-400 uppercase font-semibold">
                           <th className="pb-3">ID</th>
                           <th className="pb-3">Ad</th>
                           <th className="pb-3 text-right">Əməliyyat</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-zinc-100 text-sm">
+                      <tbody className="divide-y divide-zinc-100 dark:divide-zinc-700 text-sm">
                         {serverCategories?.map((cat) => (
-                          <tr key={cat._id || cat.id} className="hover:bg-zinc-50/50">
+                          <tr key={cat._id || cat.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-700/50">
                             <td className="py-3.5 text-zinc-400 font-mono text-xs">{cat._id || cat.id}</td>
-                            <td className="py-3.5 font-medium text-zinc-800">{cat.name}</td>
+                            <td className="py-3.5 font-medium text-zinc-800 dark:text-zinc-100">{cat.name}</td>
                             <td className="py-3.5 text-right">
                               <button
                                 onClick={() => handleDeleteCategory(cat._id || cat.id)}
@@ -388,8 +373,8 @@ function AdminDashboard() {
 
         {/* TAB 3: XƏBƏR ƏLAVƏ ET / REDAKTƏ ET */}
         {activeTab === 'news' && (
-          <div className="max-w-2xl bg-white border border-zinc-200 rounded-xl p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-zinc-800 mb-6">
+          <div className="max-w-2xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 shadow-sm">
+            <h2 className="text-xl font-bold text-zinc-800 dark:text-zinc-100 mb-6">
               {editingNewsId ? '✏️ Xəbəri Redaktə Edin' : '📰 Yeni Xəbər Paylaşın'}
             </h2>
             <form onSubmit={handleSaveNews} className="space-y-5">
@@ -401,7 +386,7 @@ function AdminDashboard() {
                   value={newsTitle}
                   onChange={(e) => setNewsTitle(e.target.value)}
                   placeholder="Xəbərin başlığını daxil edin"
-                  className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-300"
+                  className="w-full border border-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-300"
                 />
               </div>
 
@@ -410,7 +395,7 @@ function AdminDashboard() {
                 <select
                   value={selectedCatId}
                   onChange={(e) => setSelectedCatId(e.target.value)}
-                  className="w-full border border-zinc-200 bg-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-300 cursor-pointer"
+                  className="w-full border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-700 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-300 cursor-pointer"
                 >
                   <option value="">-- Kateqoriya seçin --</option>
                   {serverCategories?.map((cat) => (
@@ -421,36 +406,34 @@ function AdminDashboard() {
                 </select>
               </div>
 
-              {/*  YENİ HİSSƏ: ŞƏKİL GİRİŞİ TİPİNİN SEÇİLMƏSİ */}
-              <div className="bg-zinc-50 p-3 rounded-lg border border-zinc-200 space-y-3">
-                <label className="block text-xs font-bold text-zinc-700 uppercase tracking-wide">Şəkil Əlavə Etmə Metodu</label>
+              <div className="bg-zinc-50 dark:bg-zinc-700/50 p-3 rounded-lg border border-zinc-200 dark:border-zinc-600 space-y-3">
+                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-200 uppercase tracking-wide">Şəkil Əlavə Etmə Metodu</label>
                 <div className="flex gap-4 text-sm">
-                  <label className="flex items-center gap-2 cursor-pointer font-medium text-zinc-700">
-                    <input 
-                      type="radio" 
-                      name="imageType" 
-                      value="file" 
-                      checked={imageType === 'file'} 
-                      onChange={() => setImageType('file')} 
+                  <label className="flex items-center gap-2 cursor-pointer font-medium text-zinc-700 dark:text-zinc-200">
+                    <input
+                      type="radio"
+                      name="imageType"
+                      value="file"
+                      checked={imageType === 'file'}
+                      onChange={() => setImageType('file')}
                       className="cursor-pointer"
                     />
                     📂 Kompyuterdən fayl yüklə
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer font-medium text-zinc-700">
-                    <input 
-                      type="radio" 
-                      name="imageType" 
-                      value="url" 
-                      checked={imageType === 'url'} 
-                      onChange={() => setImageType('url')} 
+                  <label className="flex items-center gap-2 cursor-pointer font-medium text-zinc-700 dark:text-zinc-200">
+                    <input
+                      type="radio"
+                      name="imageType"
+                      value="url"
+                      checked={imageType === 'url'}
+                      onChange={() => setImageType('url')}
                       className="cursor-pointer"
                     />
-                    🔗 İnternetdən hazır Şəkil Linki (URL) qoy
+                    🔗 Şəkil Linki (URL)
                   </label>
                 </div>
 
-                {/* Dinamik Dəyişən Giriş Sahəsi */}
-                <div className="pt-2 border-t border-zinc-200/60">
+                <div className="pt-2 border-t border-zinc-200/60 dark:border-zinc-600">
                   {imageType === 'file' ? (
                     <div>
                       <label className="block text-xs font-medium text-zinc-500 mb-1">
@@ -474,7 +457,7 @@ function AdminDashboard() {
                         value={imageUrlInput}
                         onChange={(e) => setImageUrlInput(e.target.value)}
                         placeholder="https://example.com/shekil.jpg"
-                        className="w-full border border-zinc-200 bg-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-300"
+                        className="w-full border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-700 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-300"
                       />
                     </div>
                   )}
@@ -488,7 +471,7 @@ function AdminDashboard() {
                   value={newsDesc}
                   onChange={(e) => setNewsDesc(e.target.value)}
                   placeholder="Xəbər mətnini bura qeyd edin..."
-                  className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-300"
+                  className="w-full border border-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-300"
                 />
               </div>
 
@@ -497,7 +480,7 @@ function AdminDashboard() {
                   type="submit"
                   disabled={isUploading}
                   className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors text-white ${
-                    isUploading ? 'bg-zinc-400 cursor-not-allowed' : 'bg-zinc-800 hover:bg-zinc-700'
+                    isUploading ? 'bg-zinc-400 cursor-not-allowed' : 'bg-zinc-800 hover:bg-zinc-700 dark:bg-zinc-600 dark:hover:bg-zinc-500'
                   }`}
                 >
                   {isUploading ? '⌛ Gözləyin...' : editingNewsId ? '💾 Yadda Saxla' : '🚀 Əlavə Et'}
@@ -506,7 +489,7 @@ function AdminDashboard() {
                   <button
                     type="button"
                     onClick={() => { resetNewsForm(); setActiveTab('overview') }}
-                    className="px-4 py-2.5 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 rounded-lg text-sm font-medium transition-colors"
+                    className="px-4 py-2.5 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-700 dark:hover:bg-zinc-600 dark:text-zinc-200 text-zinc-700 rounded-lg text-sm font-medium transition-colors"
                   >
                     Ləğv et
                   </button>
