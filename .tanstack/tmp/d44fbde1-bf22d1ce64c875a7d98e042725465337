@@ -1,0 +1,59 @@
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+
+// Marşrut adını '/admin' olaraq dəqiqləşdirdik
+export const Route = createFileRoute('/admin/')({
+  // Guard: Token yoxdursa login-ə atır
+  beforeLoad: () => {
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      throw redirect({
+        to: '/admin/login',
+      })
+    }
+  },
+  component: AdminDashboard,
+})
+
+function AdminDashboard() {
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin_token') 
+    // Səhifəni qırmadan təmiz keçid edirik
+    navigate({ to: '/admin/login' }) 
+  }
+
+  return (
+    <div className="min-h-screen bg-zinc-50 p-8">
+      <div className="max-w-4xl mx-auto bg-white border border-zinc-200 rounded-xl p-6 shadow-sm">
+        <div className="flex justify-between items-center border-b border-zinc-100 pb-4 mb-6">
+          <div>
+            <h1 className="text-xl font-bold text-zinc-800">Admin Panel</h1>
+            <p className="text-xs text-green-600 font-medium">● Daxil olub: daivd@davidjs.dev</p>
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            Çıxış et
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-lg">
+            <p className="text-xs text-zinc-400 font-medium uppercase">Kateqoriyalar</p>
+            <p className="text-2xl font-bold text-zinc-700 mt-1">Sazlanıb</p>
+          </div>
+          <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-lg">
+            <p className="text-xs text-zinc-400 font-medium uppercase">Xəbərlər</p>
+            <p className="text-2xl font-bold text-zinc-700 mt-1">0</p>
+          </div>
+          <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-lg">
+            <p className="text-xs text-zinc-400 font-medium uppercase">Status</p>
+            <p className="text-2xl font-bold text-green-600 mt-1">Aktiv</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
