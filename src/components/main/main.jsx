@@ -3,10 +3,12 @@ import { useQuery } from '@tanstack/react-query'
 import React, { useState } from 'react'
 import { NewsCardSkeleton } from '../news/news-card-skleton'
 import { NewsCard } from '../news/news-card'
+import { useLanguage } from '../LanguageContext'
 
 const Main = () => {
     const [page, setPage] = useState(1)
     const [inputPage, setInputPage] = useState('')
+    const { t } = useLanguage()
 
     const { data, isLoading } = useQuery({
         queryKey: ['news', page],
@@ -104,7 +106,7 @@ const Main = () => {
 
                     {/* Input ilə birbaşa səhifəyə keç */}
                     <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500">Səhifəyə keç:</span>
+                        <span className="text-sm text-gray-500">{t('goToPage')}</span>
                         <input
                             type="number"
                             min={1}
@@ -119,7 +121,7 @@ const Main = () => {
                             onClick={() => goToPage(inputPage)}
                             className="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700"
                         >
-                            Get
+                            {t('go')}
                         </button>
                     </div>
 

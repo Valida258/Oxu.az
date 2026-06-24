@@ -5,15 +5,19 @@ import { createRouter, RouterProvider } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
 import { Toaster } from './components/ui/sonner'
 import { ThemeProvider } from './components/ThemeContext'
+import { LanguageProvider } from "./components/LanguageContext"
+
 
 const queryClient = new QueryClient()
 const router = createRouter({ routeTree })
 
 createRoot(document.getElementById('root')).render(
+  <LanguageProvider>
   <ThemeProvider>
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
       <Toaster />
     </QueryClientProvider>
   </ThemeProvider>
+  </LanguageProvider>
 )

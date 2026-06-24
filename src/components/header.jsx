@@ -8,12 +8,14 @@ import { Spinner } from './ui/spinner'
 import { Link } from '@tanstack/react-router'
 import { useTheme } from './ThemeContext'
 import { SunIcon, MoonIcon } from '@heroicons/react/24/outline'
+import { useLanguage } from './LanguageContext'
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const searchRef = useRef(null)
   const { theme, toggleTheme } = useTheme()
+  const { lang, setLang, t } = useLanguage()
 
   const { data: categories, isLoading: isCatsLoading } = useQuery({
     queryKey: ['categories'],
@@ -59,7 +61,7 @@ export default function Header() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Xəbər axtar..."
+            placeholder={t('searchPlaceholder')}
             className="w-full bg-zinc-100 dark:bg-indigo-950 rounded-full pl-4 pr-10 py-1.5 text-sm outline-none"
           />
           <MagnifyingGlassIcon className="size-4 absolute right-3 top-2 text-zinc-400" />
@@ -79,7 +81,7 @@ export default function Header() {
                   </Link>
                 ))
               ) : (
-                <p className="p-4 text-sm text-zinc-500">Heç bir nəticə tapılmadı.</p>
+                <p className="p-4 text-sm text-zinc-500">{t('noResults')}</p>
               )}
             </div>
           )}
@@ -94,8 +96,18 @@ export default function Header() {
           ))}
         </div>
 
-        {/* DARK MODE + LOG IN */}
+        {/* DİL SEÇİMİ + DARK MODE + LOG IN — DESKTOP */}
         <div className="hidden lg:flex lg:flex-1 lg:justify-end items-center gap-4">
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value)}
+            className="text-sm bg-transparent border border-zinc-200 dark:border-indigo-700 rounded-md px-2 py-1 text-gray-700 dark:text-white cursor-pointer outline-none"
+          >
+            <option value="az"> AZ</option>
+            <option value="en"> EN</option>
+            <option value="ru"> RU</option>
+          </select>
+
           <button
             onClick={toggleTheme}
             className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-indigo-800 transition-colors"
@@ -105,13 +117,24 @@ export default function Header() {
               : <MoonIcon className="size-5 text-gray-600" />
             }
           </button>
+
           <Link to="/admin" className="text-sm font-semibold text-gray-900 dark:text-white hover:text-indigo-600">
-            Log in <span aria-hidden="true">&rarr;</span>
+            {t('login')} <span aria-hidden="true">&rarr;</span>
           </Link>
         </div>
 
-        {/* MOBİL DÜYMƏ */}
+        {/* DİL SEÇİMİ + DARK MODE + MENYU — MOBİL */}
         <div className="flex lg:hidden items-center gap-2">
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value)}
+            className="text-sm bg-transparent border border-zinc-200 dark:border-indigo-700 rounded-md px-2 py-1 text-gray-700 dark:text-white cursor-pointer outline-none"
+          >
+            <option value="az">AZ</option>
+            <option value="en">EN</option>
+            <option value="ru">RU</option>
+          </select>
+
           <button
             onClick={toggleTheme}
             className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-indigo-800 transition-colors"
@@ -121,6 +144,7 @@ export default function Header() {
               : <MoonIcon className="size-5 text-gray-600" />
             }
           </button>
+
           <button type="button" onClick={() => setMobileMenuOpen(true)} className="-m-2.5 p-2.5 text-gray-700 dark:text-white">
             <Bars3Icon className="size-6" />
           </button>
@@ -146,7 +170,7 @@ export default function Header() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Xəbər axtar..."
+              placeholder={t('searchPlaceholder')}
               className="w-full bg-zinc-100 dark:bg-indigo-950 rounded-full pl-4 pr-10 py-2 text-sm outline-none"
             />
             <MagnifyingGlassIcon className="size-4 absolute right-3 top-2.5 text-zinc-400" />
@@ -165,7 +189,7 @@ export default function Header() {
                     </Link>
                   ))
                 ) : (
-                  <p className="p-4 text-sm text-zinc-500">Heç bir nəticə tapılmadı.</p>
+                  <p className="p-4 text-sm text-zinc-500">{t('noResults')}</p>
                 )}
               </div>
             )}
@@ -192,7 +216,7 @@ export default function Header() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-indigo-800"
                 >
-                  Log in
+                  {t('login')}
                 </Link>
               </div>
             </div>
