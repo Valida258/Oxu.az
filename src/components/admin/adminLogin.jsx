@@ -12,7 +12,6 @@ export default function AdminLogin() {
   const navigate = useNavigate(); 
 
   async function handleLogin(e) {
-    // Form onSubmit olduqda 'e' (event) avtomatik bura gəlir və problemsiz işləyir
     e.preventDefault(); 
 
     if (!login || !password) {
@@ -25,14 +24,14 @@ export default function AdminLogin() {
 
     try {
       const data = await adminLogin(login, password);
-      setResult({ type: "success", data });
 
       if (data && data.token) {
-        localStorage.setItem("admin_token", data.token);
+        localStorage.setItem("admin_token", data.token); // əvvəl token
       }
 
-      // İndi həm event düzgündür, həm də navigate problemsiz yönləndirəcək
-      navigate({ to: "/admin" }); 
+      setResult({ type: "success", data });
+
+      navigate({ to: "/admin/" }); // sonra navigate, slash ilə
 
     } catch (error) {
       setResult({ type: "error", data: { error: error.message } });
@@ -47,18 +46,14 @@ export default function AdminLogin() {
         onSubmit={handleLogin} 
         className="bg-white border border-zinc-200 rounded-xl p-8 w-full max-w-md shadow-sm"
       >
-        {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <div>
             <p className="text-sm font-medium text-zinc-800">Admin Panel Giriş</p>
           </div>
         </div>
 
-        {/* Login field */}
         <div className="mb-4">
-          <label className="block text-xs text-zinc-500 mb-1">
-            Login
-          </label>
+          <label className="block text-xs text-zinc-500 mb-1">Login</label>
           <input
             type="text"
             value={login}
@@ -68,11 +63,8 @@ export default function AdminLogin() {
           />
         </div>
 
-        {/* Password field */}
         <div className="mb-6">
-          <label className="block text-xs text-zinc-500 mb-1">
-            Password
-          </label>
+          <label className="block text-xs text-zinc-500 mb-1">Password</label>
           <div className="relative">
             <input
               type={showPass ? "text" : "password"}
@@ -82,7 +74,7 @@ export default function AdminLogin() {
               className="w-full border border-zinc-200 rounded-lg px-3 py-2 pr-10 text-sm outline-none focus:ring-2 focus:ring-zinc-300"
             />
             <button
-              type="button" // Form daxilindəki digər düymələrin form-u submit etməməsi üçün type="button" vacibdir
+              type="button"
               onClick={() => setShowPass(!showPass)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 text-sm"
             >
@@ -91,16 +83,14 @@ export default function AdminLogin() {
           </div>
         </div>
 
-        {/* Submit button */}
         <button
-          type="submit" // Təyin olunmuş onSubmit funksiyasını tetikləyir
+          type="submit"
           disabled={loading}
           className="w-full bg-zinc-800 hover:bg-zinc-700 disabled:bg-zinc-300 text-white rounded-lg py-2.5 text-sm font-medium transition-colors"
         >
           {loading ? "Gözlə..." : "Daxil ol"}
         </button>
 
-        {/* Result */}
         {result && (
           <div
             className={`mt-4 rounded-lg p-3 text-xs font-mono whitespace-pre-wrap break-all ${

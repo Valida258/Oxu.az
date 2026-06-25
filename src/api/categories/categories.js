@@ -57,4 +57,23 @@ const deleteCategory = async (id) => {
     }
 };
 
-export { getCategories, getCategoryById, createCategory, deleteCategory };
+// 5. YENİ: Kateqoriyanı yenilə
+const updateCategory = async (id, name) => {
+    try {
+        const token = localStorage.getItem("admin_token");
+        const response = await api.put(`/categories/${id}`, 
+            { name }, 
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+};
+
+export { getCategories, getCategoryById, createCategory, deleteCategory, updateCategory };
