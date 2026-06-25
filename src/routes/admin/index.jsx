@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'  // redirect sil
+import { createFileRoute, useNavigate } from '@tanstack/react-router'  
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getCategories, createCategory, deleteCategory } from "../../api/categories/categories";
@@ -6,6 +6,7 @@ import { getNews, createNews, deleteNews, uploadImage, updateNews } from "../../
 import { useTheme } from '../../components/ThemeContext'
 import { useLanguage } from '../../components/LanguageContext'
 import { SunIcon, MoonIcon } from '@heroicons/react/24/outline'
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/admin/')({
   beforeLoad: () => {
