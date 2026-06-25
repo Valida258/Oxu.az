@@ -1,4 +1,3 @@
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'  
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getCategories, createCategory, deleteCategory } from "../../api/categories/categories";
