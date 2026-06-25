@@ -8,6 +8,12 @@ import { useLanguage } from '../../components/LanguageContext'
 import { SunIcon, MoonIcon } from '@heroicons/react/24/outline'
 
 export const Route = createFileRoute('/admin/')({
+  beforeLoad: () => {
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      throw redirect({ to: '/admin/login' })
+    }
+  },
   component: AdminDashboard,
 })
 function AdminDashboard() {
